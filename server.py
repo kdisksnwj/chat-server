@@ -3,38 +3,30 @@ import time
 
 app = Flask(__name__)
 
-# stocke les connexions
-connections = []
+connections = {}
 
 @app.route("/")
 def home():
     return "Serveur OK 🚀"
 
-# appelé par le client quand il se connecte
+# le client appelle ça quand il se connecte
 @app.route("/connect")
 def connect():
     ip = request.remote_addr
-
-    connections.append({
-        "ip": ip,
-        "time": time.time()
-    })
-
-    print(f"🟢 Connexion: {ip}")
-
+    connections[ip] = time.time()
     return {"status": "connected"}
 
-# status pour ton client Python
+# GitHub Pages va lire ça
 @app.route("/status")
 def status():
     now = time.time()
 
-    # garder seulement les connexions des 30 dernières secondes
-    active = [c for c in connections if now - c["time"] < 30]
+    # garder seulement les connexions des 30 dernières sec
+    active = {ip: t for ip, t in connections.items() if now - t < 30}
 
     return jsonify({
         "online": len(active),
-        "clients": active
+        "clients": list(active.keys())
     })
 
 if __name__ == "__main__":
